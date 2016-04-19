@@ -4,15 +4,15 @@
     <logicalFolder name="SourceFiles"
                    displayName="Исходные файлы"
                    projectFiles="true">
-      <itemPath>Decryptor.cpp</itemPath>
-      <itemPath>explode.c</itemPath>
+      <itemPath>pklib/crc32.c</itemPath>
+      <itemPath>pklib/explode.c</itemPath>
+      <itemPath>pklib/implode.c</itemPath>
       <itemPath>main.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="HeaderFiles"
                    displayName="Файлы заголовков"
                    projectFiles="true">
-      <itemPath>Decryptor.h</itemPath>
-      <itemPath>pklib.h</itemPath>
+      <itemPath>pklib/pklib.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Файлы ресурсов"
@@ -30,6 +30,9 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
   </logicalFolder>
+  <sourceRootList>
+    <Elem>pklib</Elem>
+  </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="Debug" type="1">
@@ -40,15 +43,15 @@
       </toolsSet>
       <compileType>
       </compileType>
-      <item path="Decryptor.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="Decryptor.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="explode.c" ex="false" tool="0" flavor2="0">
-      </item>
       <item path="main.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="pklib.h" ex="false" tool="3" flavor2="0">
+      <item path="pklib/crc32.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="pklib/explode.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="pklib/implode.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="pklib/pklib.h" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
     <conf name="Release" type="1">
@@ -71,15 +74,15 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
-      <item path="Decryptor.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="Decryptor.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="explode.c" ex="false" tool="0" flavor2="0">
-      </item>
       <item path="main.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="pklib.h" ex="false" tool="3" flavor2="0">
+      <item path="pklib/crc32.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="pklib/explode.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="pklib/implode.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="pklib/pklib.h" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
   </confs>

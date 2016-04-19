@@ -16,7 +16,7 @@
 
 #include <string>
 
-#include "pklib.h"
+#include "pklib/pklib.h"
 
 #define DEFAULT_CAT_KEY "LSLIB"
 #define DEFAULT_REC_KEY "GreatBlueShark!"
@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
         if (catalogue[i].compressed) {
             // PKWARE comression
             void *pkware_ctx = malloc(sizeof(TDcmpStruct));
-            explode(read_buf, write_buf, pkware_ctx, &io_ctx);
+            explode(read_buf, write_buf, (char *)pkware_ctx, &io_ctx);
             free(pkware_ctx);
             
         } else {
