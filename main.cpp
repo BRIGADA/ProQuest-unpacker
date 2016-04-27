@@ -73,19 +73,29 @@ void decrypt(void *buf, unsigned int size, std::string key) {
 }
 
 unsigned int read_buf(char *buf, unsigned int *size, void *ctx) {
-    *size = fread(buf, 1, *size, reinterpret_cast<io_ctx_t*>(ctx)->in);
-    decrypt(buf, *size, reinterpret_cast<io_ctx_t*>(ctx)->key);
+    *size = fread(buf, 1, *size, ((io_ctx_t*)ctx)->in);
+    decrypt(buf, *size, ((io_ctx_t*)ctx)->key);
     return *size;
 }
 
 void write_buf(char *buf, unsigned int *size, void *ctx) {
-    *size = fwrite(buf, 1, *size, reinterpret_cast<io_ctx_t*>(ctx)->out);
+    *size = fwrite(buf, 1, *size, ((io_ctx_t*)ctx)->out);
+}
+
+void usage() {
+    printf("ProQuest tool, v1.0\n");
+    printf("-------------------\n");
+    printf("\n");
+    printf("Usage:\n");
+    printf("\tpqtool <file> - list content\n");
+    printf("\tpqtool <file> <index> [outfile] - extract content by index");
 }
 
 /*
  * 
  */
 int main(int argc, char** argv) {
+    
     if (argc < 2) {
         return -1;
     }
@@ -93,21 +103,21 @@ int main(int argc, char** argv) {
     io_ctx_t io_ctx;
     io_ctx.in = fopen(argv[1], "rb");
     if (io_ctx.in == NULL) {
+        perror("fopen");
         return -2;
     }
 
-    BundleHeader header;
-    printf("Header...\n");
-    fread(&header, sizeof (header), 1, io_ctx.in);
-    printf("magic: %hu\n", header.magic);
-    printf("count: %hu\n", header.count);
-    printf("  res:");
-    for (unsigned char i = 0; i < 21; ++i) {
-        printf(" %04hx", header.res[i]);
+    BundleHeader header;    
+    if(fread(&header, sizeof (header), 1, io_ctx.in) != 1) {
+        printf("can't read header\n");
+        return -3;
     }
-    printf("\n\n");
+    if(header.magic != 300) {
+        return -4;
+    }
 
-    CatalogueRecord *catalogue = new CatalogueRecord[header.count];
+    CatalogueRecord *catalogue = (CatalogueRecord*)calloc(header.count, sizeof(CatalogueRecord));
+    
     fseek(io_ctx.in, -(sizeof (CatalogueRecord) * header.count), SEEK_END);
     fread(catalogue, sizeof (CatalogueRecord), header.count, io_ctx.in);
 
@@ -138,13 +148,13 @@ int main(int argc, char** argv) {
             
         } else {
             // no compression
-            char *buf = reinterpret_cast<char *>(malloc(512));
+            void *buf = malloc(512);
             
             unsigned int remain = catalogue[i].size;
             while(remain) {
                 unsigned int bsize = remain > 512 ? 512 : remain;
-                read_buf(buf, &bsize, &io_ctx);
-                write_buf(buf, &bsize, &io_ctx);
+                read_buf((char*)buf, &bsize, &io_ctx);
+                write_buf((char*)buf, &bsize, &io_ctx);
                 remain -= bsize;
             }
             
@@ -154,7 +164,7 @@ int main(int argc, char** argv) {
         fclose(io_ctx.out);
     }
 
-    delete [] catalogue;
+    free(catalogue);
 
     fclose(io_ctx.in);
 
