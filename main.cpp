@@ -15,6 +15,7 @@
 #include <cstdio>
 
 #include <string>
+#include <string.h>
 
 #include "pklib/pklib.h"
 
@@ -73,13 +74,13 @@ void decrypt(void *buf, unsigned int size, std::string key) {
 }
 
 unsigned int read_buf(char *buf, unsigned int *size, void *ctx) {
-    *size = fread(buf, 1, *size, ((io_ctx_t*)ctx)->in);
-    decrypt(buf, *size, ((io_ctx_t*)ctx)->key);
+    *size = fread(buf, 1, *size, ((io_ctx_t*) ctx)->in);
+    decrypt(buf, *size, ((io_ctx_t*) ctx)->key);
     return *size;
 }
 
 void write_buf(char *buf, unsigned int *size, void *ctx) {
-    *size = fwrite(buf, 1, *size, ((io_ctx_t*)ctx)->out);
+    *size = fwrite(buf, 1, *size, ((io_ctx_t*) ctx)->out);
 }
 
 void usage() {
@@ -95,11 +96,11 @@ void usage() {
  * 
  */
 int main(int argc, char** argv) {
-    
+
     if (argc < 2) {
         return -1;
     }
-    
+
     io_ctx_t io_ctx;
     io_ctx.in = fopen(argv[1], "rb");
     if (io_ctx.in == NULL) {
@@ -107,17 +108,17 @@ int main(int argc, char** argv) {
         return -2;
     }
 
-    BundleHeader header;    
-    if(fread(&header, sizeof (header), 1, io_ctx.in) != 1) {
+    BundleHeader header;
+    if (fread(&header, sizeof (header), 1, io_ctx.in) != 1) {
         printf("can't read header\n");
         return -3;
     }
-    if(header.magic != 300) {
+    if (header.magic != 300) {
         return -4;
     }
 
-    CatalogueRecord *catalogue = (CatalogueRecord*)calloc(header.count, sizeof(CatalogueRecord));
-    
+    CatalogueRecord *catalogue = (CatalogueRecord*) calloc(header.count, sizeof (CatalogueRecord));
+
     fseek(io_ctx.in, -(sizeof (CatalogueRecord) * header.count), SEEK_END);
     fread(catalogue, sizeof (CatalogueRecord), header.count, io_ctx.in);
 
@@ -125,42 +126,58 @@ int main(int argc, char** argv) {
     std::string rec_key = generate_key(DEFAULT_REC_KEY);
 
     io_ctx.key = rec_key;
-    
-    for (unsigned short i = 0; i < header.count; ++i) {
-        decrypt(&catalogue[i], sizeof (CatalogueRecord), cat_key);
-        //        d0.decrypt(&catalogue[i], sizeof (CatalogueRecord));
 
-        printf("Record %hu\n--------\n", i);
-        printf("name: '%.14s'\n", catalogue[i].name);
-        printf(" off: %u\n", catalogue[i].offset);
-        printf("size: %u\n", catalogue[i].size);
-        printf("flag: %08x\n\n", catalogue[i].compressed);
-
-        fseek(io_ctx.in, catalogue[i].offset, SEEK_SET);
-        
-        io_ctx.out = fopen(catalogue[i].name, "w+b");
-
-        if (catalogue[i].compressed) {
-            // PKWARE comression
-            void *pkware_ctx = malloc(sizeof(TDcmpStruct));
-            explode(read_buf, write_buf, (char *)pkware_ctx, &io_ctx);
-            free(pkware_ctx);
-            
-        } else {
-            // no compression
-            void *buf = malloc(512);
-            
-            unsigned int remain = catalogue[i].size;
-            while(remain) {
-                unsigned int bsize = remain > 512 ? 512 : remain;
-                read_buf((char*)buf, &bsize, &io_ctx);
-                write_buf((char*)buf, &bsize, &io_ctx);
-                remain -= bsize;
-            }
-            
-            free(buf);
+    if (argc == 2) {
+        // LIST
+        for (unsigned int i = 0; i < header.count; ++i) {
+            decrypt(&catalogue[i], sizeof (CatalogueRecord), cat_key);
+            printf("%.14s\n", catalogue[i].name);
         }
-        
+        return 0;
+    }
+
+    unsigned long int index = strtoul(argv[2], NULL, 0);
+
+    if (index >= header.count) {
+        printf("index out of range\n");
+        return -1;
+    }
+
+    decrypt(&catalogue[index], sizeof (CatalogueRecord), cat_key);
+
+    char *outname = argc > 3 ? argv[3] : catalogue[index].name;
+
+    if (strncmp(outname, "-", 14) == 0) {
+        io_ctx.out = stdout;
+    } else {
+        io_ctx.out = fopen(outname, "w+b");
+    }
+
+    if (io_ctx.out == NULL) {
+        printf("unable to open out file\n");
+        return -1;
+    }
+
+    fseek(io_ctx.in, catalogue[index].offset, SEEK_SET);
+
+    if (catalogue[index].compressed) {
+        void *pkware_ctx = malloc(sizeof (TDcmpStruct));
+        explode(read_buf, write_buf, (char *) pkware_ctx, &io_ctx);
+        free(pkware_ctx);
+    } else {
+        void *buf = malloc(512);
+        unsigned int remain = catalogue[index].size;
+        while (remain) {
+            unsigned int bsize = remain > 512 ? 512 : remain;
+            read_buf((char*) buf, &bsize, &io_ctx);
+            write_buf((char*) buf, &bsize, &io_ctx);
+            remain -= bsize;
+        }
+
+        free(buf);
+    }
+
+    if (io_ctx.out != stdout) {
         fclose(io_ctx.out);
     }
 
