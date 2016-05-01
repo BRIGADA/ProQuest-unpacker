@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=ProQuest-unpacker
+PROJECTNAME=ProQuestUnpack
 
 # Active Configuration
 DEFAULTCONF=Debug
