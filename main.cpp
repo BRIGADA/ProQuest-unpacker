@@ -12,6 +12,7 @@
  */
 
 #include <cstdlib>
+#include <sys/param.h>
 #include <cstdio>
 
 #include <string>
@@ -92,6 +93,8 @@ void usage() {
     printf("\tpqtool <file> <index> [outfile] - extract content by index");
 }
 
+void extract(io_ctx_t &io_ctx, const CatalogueRecord &item);
+
 /*
  * 
  */
@@ -127,64 +130,88 @@ int main(int argc, char** argv) {
 
     io_ctx.key = rec_key;
 
+    for (unsigned int i = 0; i < header.count; ++i) {
+        decrypt(&catalogue[i], sizeof (CatalogueRecord), cat_key);
+    }
+
     if (argc == 2) {
         // LIST
         for (unsigned int i = 0; i < header.count; ++i) {
-            decrypt(&catalogue[i], sizeof (CatalogueRecord), cat_key);
             printf("%.14s\n", catalogue[i].name);
         }
         return 0;
     }
-
-    unsigned long int index = strtoul(argv[2], NULL, 0);
-
-    if (index >= header.count) {
-        printf("index out of range\n");
-        return -1;
+    
+    for(unsigned int i = 0; i < argc; ++i) {
+        printf("argv[%u]='%s'\n", i, argv[i]);
     }
 
-    decrypt(&catalogue[index], sizeof (CatalogueRecord), cat_key);
+    if (strcmp("x", argv[2]) == 0) {
 
-    char *outname = argc > 3 ? argv[3] : catalogue[index].name;
+        const char * outdir = argc == 4 ? argv[3] : ".";
+        char outname[PATH_MAX];
 
-    if (strncmp(outname, "-", 14) == 0) {
-        io_ctx.out = stdout;
+        for (unsigned int i = 0; i < header.count; ++i) {
+            snprintf(outname, PATH_MAX, "%s/%s", outdir, catalogue[i].name);
+            io_ctx.out = fopen(outname, "w+b");
+            extract(io_ctx, catalogue[i]);
+            fclose(io_ctx.out);
+        }
     } else {
-        io_ctx.out = fopen(outname, "w+b");
+
+        unsigned long int index = strtoul(argv[2], NULL, 0);
+
+        if (index >= header.count) {
+            printf("index out of range\n");
+            return -1;
+        }
+
+        //    decrypt(&catalogue[index], sizeof (CatalogueRecord), cat_key);
+
+        char *outname = argc > 3 ? argv[3] : catalogue[index].name;
+
+        if (strncmp(outname, "-", 14) == 0) {
+            io_ctx.out = stdout;
+        } else {
+            io_ctx.out = fopen(outname, "w+b");
+        }
+
+        if (io_ctx.out == NULL) {
+            printf("unable to open out file\n");
+            return -1;
+        }
+
+        extract(io_ctx, catalogue[index]);
+
+        if (io_ctx.out != stdout) {
+            fclose(io_ctx.out);
+        }
+
+        fclose(io_ctx.in);
     }
 
-    if (io_ctx.out == NULL) {
-        printf("unable to open out file\n");
-        return -1;
-    }
+    free(catalogue);
 
-    fseek(io_ctx.in, catalogue[index].offset, SEEK_SET);
+    return 0;
+}
 
-    if (catalogue[index].compressed) {
+void extract(io_ctx_t &io_ctx, const CatalogueRecord &item) {
+    fseek(io_ctx.in, item.offset, SEEK_SET);
+
+    if (item.compressed) {
         void *pkware_ctx = malloc(sizeof (TDcmpStruct));
         explode(read_buf, write_buf, (char *) pkware_ctx, &io_ctx);
         free(pkware_ctx);
     } else {
         void *buf = malloc(512);
-        unsigned int remain = catalogue[index].size;
+        unsigned int remain = item.size;
         while (remain) {
             unsigned int bsize = remain > 512 ? 512 : remain;
             read_buf((char*) buf, &bsize, &io_ctx);
             write_buf((char*) buf, &bsize, &io_ctx);
             remain -= bsize;
         }
-
         free(buf);
     }
-
-    if (io_ctx.out != stdout) {
-        fclose(io_ctx.out);
-    }
-
-    free(catalogue);
-
-    fclose(io_ctx.in);
-
-    return 0;
 }
 

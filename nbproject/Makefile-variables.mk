@@ -9,19 +9,19 @@ CND_DISTDIR=dist
 # Debug configuration
 CND_PLATFORM_Debug=GNU-Linux
 CND_ARTIFACT_DIR_Debug=dist/Debug/GNU-Linux
-CND_ARTIFACT_NAME_Debug=proquestunpack
-CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux/proquestunpack
+CND_ARTIFACT_NAME_Debug=proquest-unpacker
+CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux/proquest-unpacker
 CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux/package
-CND_PACKAGE_NAME_Debug=proquestunpack.tar
-CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux/package/proquestunpack.tar
+CND_PACKAGE_NAME_Debug=proquest-unpacker.tar
+CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux/package/proquest-unpacker.tar
 # Release configuration
 CND_PLATFORM_Release=GNU-Linux
 CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux
-CND_ARTIFACT_NAME_Release=proquestunpack
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux/proquestunpack
+CND_ARTIFACT_NAME_Release=proquest-unpacker
+CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux/proquest-unpacker
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux/package
-CND_PACKAGE_NAME_Release=proquestunpack.tar
-CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux/package/proquestunpack.tar
+CND_PACKAGE_NAME_Release=proquest-unpacker.tar
+CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux/package/proquest-unpacker.tar
 #
 # include compiler specific variables
 #
